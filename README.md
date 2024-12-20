@@ -1,8 +1,5 @@
 <h1 align="center">🥦EnjoyFitness AI</h1>
 <h3 align="center">An Open-source AI-driven dietary health solutions.</h3>
-![Static Badge](https://img.shields.io/badge/release-demo-blueviolet)
-
-
 
 
 ## Feature
