@@ -16,6 +16,6 @@
 
 |      | Programming | Code Review | Release        |
 | ---- | ----------- | ----------- | -------------- |
-| Demo | ✅           | ✅           | ✅              |
+| Demo | ✅           | ✅           | ✅ Try it   |
 | API  | ✅           | ✅           | Comming soon ! |
 | App  | ✅           | 👨‍💻          | 👨‍💻             |
