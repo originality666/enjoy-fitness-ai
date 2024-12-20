@@ -1,0 +1,5 @@
+fastapi==0.115.6
+gradio==5.0.1
+illufly==0.5.22
+openai==1.57.0
+transformers==4.47.0
