@@ -12,15 +12,23 @@ from openai import OpenAI
 from utils.app_agent import fitness_guide, exercise_guide
 
 # 设置OpenAI API密钥
-openai_api_key = os.getenv("OPENAI_API_KEY")
-openai_api_base = os.getenv("OPENAI_API_BASE")
-base_model = os.getenv("BASE_MODEL")
+openai_api_key = "sk-proj-zCx1_3GzjBeripyA_qyzk1FP25wwhN_yZKQOz1LomCd8bSZ83FrvBL\
+                  TmiyuWBr-4YK6UE3nLvRT3BlbkFJW1Ig-2t6TLyFtRnX6ICV6B6f36aZrrXO2m\
+                  6q5dE9DgYslFZHZXejYPgTBhy7Xg9kRmQRlXhUQA"
+base_model_openai = "gpt-4o-mini"
+client_openai = OpenAI(api_key = openai_api_key )
 
 
-client = OpenAI(
-    api_key=openai_api_key,
-    base_url=openai_api_base,
-)
+# 设置阿里云API密钥
+base_model_ali = "qwen-vl-plus"
+ali_api_key = "sk-9c60fd0afe2540c9a821dad4fa12d62a"
+ali_base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
+
+client_ali = OpenAI(
+    api_key = ali_api_key,
+    base_url = ali_base_url
+    )
+
 
 # 定义一个函数，用于从Markdown文本中提取JSON
 def extract_json_from_markdown(markdown_text):
@@ -106,7 +114,6 @@ def process_json(json_data_list):
 
     return processed_data
 
-
 def extract_list_string_from_text(response_text):
     # 使用正则表达式查找列表的数据部分
     list_pattern = re.compile(r'\[\{.*?\}\]', re.DOTALL)
@@ -183,9 +190,9 @@ def pretty_print(json_data):
     pretty_print_text = ""
     total_kcal = 0
     for item in json_data:
-        pretty_print_text += f"{item['food']} {item['number']}g {item['kcal']}Kcal\n"
+        pretty_print_text += f"{item['food']}   {item['number']} g   {item['kcal']} Kcal\n"
         total_kcal += item['kcal']
-    pretty_print_text += f"共摄入 {total_kcal}Kcal"
+    pretty_print_text += f"共摄入 {total_kcal} Kcal"
     return pretty_print_text
 
 # 定义计算BMI的函数
@@ -231,17 +238,17 @@ def calculate_bmi_bmr_target_calorie(gender, age, height, weight, goal):
 # 热量检测
 def process_image(image):
     # 打开系统提示文件，读取内容
-    with open("prompt/sys_prompt_m1.txt", "r", encoding="utf-8") as f:
+    with open("D:\enjoyfitness\enjoy-fitness-ai\demo\prompt\sys_prompt_m1.txt", "r", encoding="utf-8") as f:
         sys_prompt = f.read()
 
-    with open("prompt/sys_prompt_m1_review.txt", "r", encoding="utf-8") as f:
+    with open("D:\enjoyfitness\enjoy-fitness-ai\demo\prompt\sys_prompt_m1_review.txt", "r", encoding="utf-8") as f:
         sys_prompt_review = f.read()
 
     with open(image, "rb") as image_file:
         encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
 
-    response = client.chat.completions.create(
-        model=base_model,
+    response = client_openai.chat.completions.create(
+        model=base_model_openai,
         messages=[
             {
                 "role": "system",
@@ -268,8 +275,8 @@ def process_image(image):
     print(user_review_text)
 
     #再次校验数据正确性
-    review_response = client.chat.completions.create(
-        model=base_model,
+    review_response = client_openai.chat.completions.create(
+        model=base_model_openai,
         messages=[
             {
                 "role": "system",
@@ -306,7 +313,7 @@ def process_image(image):
 
     except (SyntaxError, ValueError) as e:
         print("Error converting string to list:", e)
-        return "数据异常，请重试。:("
+        return "api访问异常,请之后重试"
 
     # """
     # 输出格式如下所示：
@@ -318,6 +325,35 @@ def process_image(image):
     # output_text_temp = ('拉面 500克 1500Kcal\n共摄入 1500Kcal')
     # llm_output_text 是一个包含解析后的JSON对象的列表。
 
+# 视觉理解
+def process_image_ali(image):
+
+    # 打开系统提示文件，读取内容
+    with open(image, "rb") as image_file:
+        encoded_image_ali = base64.b64encode(image_file.read()).decode('utf-8')
+
+    response = client_ali.chat.completions.create(
+        model=base_model_ali,
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                      "type": "text",
+                      "text": "请检测图片中的食物名称,数量,并针对每种食物给出热量估计(卡路里作为单位)。"
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{encoded_image_ali}"
+                        }
+                    }
+                ]
+            }
+        ]
+    )
+
+    return response.choices[0].message.content
 
 # 饮食建议
 def get_fitness_guide(gender, age, height, weight, goal, target_weight):
@@ -334,8 +370,7 @@ def get_exercise_guide(gender, age, height, weight, goal, target_weight):
 # 使用 HTML 和内联 CSS 来设置描述文本的样式
 description_html = """
 <div style="text-align: center;">
-    <h1>Enjoy Fitness Demo</h1>
-    <h3>由多模态模型驱动的健康管理系统</h3>
+    <h2>多模态模型和数据库驱动的健康管理系统</h2>
 </div>
 """
 
@@ -365,12 +400,13 @@ with gr.Blocks() as demo:
     result_output = gr.Textbox(label="返回结果")
 
     # 创建按钮并设置点击事件
-    btn_method_1 = gr.Button("热量检测")
+    btn_method_1 = gr.Button("食物热量检测")
     btn_method_2 = gr.Button("健康建议")
     btn_method_3 = gr.Button("运动指导")
+    btn_method_4 = gr.Button("记录一下")   
 
     btn_method_1.click(
-        fn=process_image,
+        fn=process_image_ali,
         inputs=image_input,
         outputs=result_output
     )
@@ -387,9 +423,15 @@ with gr.Blocks() as demo:
         outputs=result_output
     )
 
+    btn_method_4.click(
+        fn=process_image,
+        inputs=image_input,
+        outputs=result_output
+    )
+
     weight_input.change(fn=update_goal, inputs=[weight_input, target_weight_input], outputs=goal_input)
     target_weight_input.change(fn=update_goal, inputs=[weight_input, target_weight_input], outputs=goal_input)
 
 # 启动Gradio应用
 if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0", server_port=7860)
+    demo.launch(server_name="127.0.0.1", server_port=7862,share =True)
