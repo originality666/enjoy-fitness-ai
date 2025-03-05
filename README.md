@@ -15,7 +15,7 @@
 
 |      | Programming | Code Review | Release                                                      |
 | ---- | ----------- | ----------- | ------------------------------------------------------------ |
-| Demo | ✅           | ✅           | ✅  [Try it !](https://github.com/EnjoyCloudDev/enjoy-fitness-ai/tree/main/demo) |
+| Demo | ✅           | ✅           | ✅  [Try it !](https://github.com/originality666/enjoy-fitness-ai.git)|
 | API  | ✅           | ✅           | Comming soon !                                               |
 | App  | ✅           | 👨‍💻          | 👨‍💻                                                           |
 
@@ -35,23 +35,11 @@ We recommend using Docker to deploy the demo application.
 
    ```shell
    $cd demo/
-   $nano .env
-   
-   OPENAI_API_KEY = "YOUR_API_KEY"
-   OPENAI_API_BASE = "YOUR_API_URL"
-   BASE_MODEL = "YOUR_MODEL_NAME"
+   $pip install --no-cache-dir -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
    ```
 
-3. Build docker image
+3. Run the demo
 
    ```shell
-   docker build -t enjoyfitness_demo:latest .
+   $python app_main.py
    ```
-
-4. Run
-
-   ```shell
-   docker run -d --name enjoyfitness-api --env-file .env -p 7860:7860 enjoyfitness_demo:latest
-   ```
-
-   
